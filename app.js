@@ -3,22 +3,25 @@ const bodyParser = require("body-parser");
 const mongoose = require("mongoose");
 const ejs = require("ejs");
 const _ = require("lodash");
-require('dotenv').config();
+const res = require("express/lib/response");
+require("dotenv").config();
 
 const app = express();
 const port = 3000;
 
-
-const posts = [];
+let posts = [];
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(express.static(__dirname + "/public"));
 
 app.set("view engine", "ejs");
 
-mongoose.connect(
-  `mongodb+srv://${process.env.USER_DB}:${process.env.PASSWORD_DB}@cluster0.wyadc.mongodb.net/blog?retryWrites=true&w=majority`
-).then((res)=>console.log("Connection with datebase established")).catch(err=>console.error(err));
+mongoose
+  .connect(
+    `mongodb+srv://${process.env.USER_DB}:${process.env.PASSWORD_DB}@cluster0.wyadc.mongodb.net/blog?retryWrites=true&w=majority`
+  )
+  .then((res) => console.log("Connection with datebase established"))
+  .catch((err) => console.error(err));
 
 const postSchema = mongoose.Schema({
   title: { type: String, required: [true, "Title is required"] },
@@ -26,6 +29,12 @@ const postSchema = mongoose.Schema({
 });
 
 const Post = mongoose.model("Post", postSchema);
+
+//Getting all posts from datebase
+Post.find({}, (err, postsFromDB) => {
+  if (err) res.send(err);
+  posts = postsFromDB;
+});
 
 const homeStartingContent =
   "This is a simple NodeJS blog. This app use EJS & Express.";
@@ -64,7 +73,7 @@ app.get("/posts/:postTitle", (req, res) => {
 app.post("/compose", (req, res) => {
   const newPost = { title: req.body.title, content: req.body.content };
   const postToDB = new Post({ title: newPost.title, content: newPost.content });
-  postToDB.save().then(res=>console.log("Post added to datebase!"));
+  postToDB.save().then((res) => console.log("Post added to datebase!"));
   posts.push(newPost);
   res.render(`${__dirname}/views/compose`);
 });
