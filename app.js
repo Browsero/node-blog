@@ -1,10 +1,13 @@
 const express = require("express");
 const bodyParser = require("body-parser");
+const mongoose = require("mongoose");
 const ejs = require("ejs");
-const _ = require('lodash');
+const _ = require("lodash");
+require('dotenv').config();
 
 const app = express();
 const port = 3000;
+
 
 const posts = [];
 
@@ -12,6 +15,17 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(express.static(__dirname + "/public"));
 
 app.set("view engine", "ejs");
+
+mongoose.connect(
+  `mongodb+srv://${process.env.USER_DB}:${process.env.PASSWORD_DB}@cluster0.wyadc.mongodb.net/blog?retryWrites=true&w=majority`
+).then((res)=>console.log("Connection with datebase established")).catch(err=>console.error(err));
+
+const postSchema = mongoose.Schema({
+  title: { type: String, required: [true, "Title is required"] },
+  content: { type: String, required: [true, "Content is required"] },
+});
+
+const Post = mongoose.model("Post", postSchema);
 
 const homeStartingContent =
   "This is a simple NodeJS blog. This app use EJS & Express.";
@@ -40,14 +54,17 @@ app.get("/compose", (req, res) => {
 });
 
 app.get("/posts/:postTitle", (req, res) => {
-
-  const post = posts.find((post) => _.lowerCase(post.title) === _.lowerCase(req.params.postTitle));
+  const post = posts.find(
+    (post) => _.lowerCase(post.title) === _.lowerCase(req.params.postTitle)
+  );
   if (post) res.render(`${__dirname}/views/post`, { post: post });
   else res.render(`${__dirname}/views/404`);
 });
 
 app.post("/compose", (req, res) => {
   const newPost = { title: req.body.title, content: req.body.content };
+  const postToDB = new Post({ title: newPost.title, content: newPost.content });
+  postToDB.save().then(res=>console.log("Post added to datebase!"));
   posts.push(newPost);
   res.render(`${__dirname}/views/compose`);
 });
