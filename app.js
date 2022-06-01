@@ -63,7 +63,6 @@ app.get("/compose", (req, res) => {
 });
 
 app.get("/posts/:postTitle", (req, res) => {
-  console.log(req.params.postTitle)
   const post = posts.find(
     (post) => _.lowerCase(post.title) === _.lowerCase(req.params.postTitle)
   );
