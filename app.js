@@ -7,7 +7,7 @@ const res = require("express/lib/response");
 require("dotenv").config();
 
 const app = express();
-const port = 8080;
+const port = process.env.PORT || 3000;
 
 let posts = [];
 
